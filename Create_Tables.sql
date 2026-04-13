@@ -168,37 +168,3 @@ CREATE TABLE dw.audit(
 	execution_status VARCHAR(20) NOT NULL
 );
 GO
-
-/*
-WHEN MATCHED AND Target.dw_row_checksum <> Source.dw_row_checksum THEN
-    UPDATE SET
-        Target.age_at_transaction = Source.age_at_transaction,
-        Target.lat = Source.lat,
-        Target.long = Source.long,
-        Target.city_population = Source.city_population,
-        Target.amount = Source.amount,
-        Target.is_fraud = Source.is_fraud,
-        Target.time_stamp = Source.time_stamp,
-        Target.hour = Source.hour,
-        Target.date_id = Source.date_id,
-        Target.card_holder_id = Source.card_holder_id,
-        Target.merchant_id = Source.merchant_id,
-        Target.category_id = Source.category_id,
-        Target.dw_row_checksum = Source.dw_row_checksum
-
--- SCENARIO B: Insert if brand new transaction
-WHEN NOT MATCHED THEN
-    INSERT (
-        trans_num, credit_card_number, age_at_transaction, lat, long,
-        city_population, amount, is_fraud, time_stamp, hour,
-        date_id, card_holder_id, merchant_id, category_id, dw_row_checksum
-    )
-    VALUES (
-        Source.trans_num, Source.credit_card_number, Source.age_at_transaction, Source.lat, Source.long,
-        Source.city_population, Source.amount, Source.is_fraud, Source.time_stamp, Source.hour,
-        Source.date_id, Source.card_holder_id, Source.merchant_id, Source.category_id, Source.dw_row_checksum
-    );
-
--- 2. Clean up the prep table so it is empty for the next run
-TRUNCATE TABLE stage.fact_prep;
-*/
