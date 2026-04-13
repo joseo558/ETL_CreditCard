@@ -120,6 +120,10 @@ CREATE TABLE fact.credit_card_transaction (
     is_fraud BIT NOT NULL,
     time_stamp DATETIME2 NOT NULL,
     hour INT NOT NULL,
+    dw_row_checksum VARCHAR(200) NULL,
+    dw_run_id VARCHAR(50) NOT NULL,
+    dw_updated_on DATETIME2 NOT NULL,
+    dw_source_system VARCHAR(50) NOT NULL,
 
     -- FK
     date_id INT NOT NULL,
