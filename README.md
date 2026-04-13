@@ -1,1 +1,152 @@
-# ETL_CreditCard
+# Proposition
+
+Area: Bank and Finance
+
+Values we hope to generate:
+
+- Credit Card use per USA State
+- Credit Card use per time frame
+- Credit Card Transactions per store type
+
+Data source: https://www.kaggle.com/datasets/priyamchoksi/credit-card-transactions-dataset/data
+
+Potencial to mix information from different data sources: Yes
+
+# Columns in input
+
+| Name | Type Inferred | Description |
+| --- | --- | --- |
+| Unnamed: 0 | int | Row number id |
+| trans_date_trans_time | DateTime | Timestamp of the transaction. |
+| cc_num | varchar(30) | Credit card number (hashed or anonymized). |
+| merchant | varchar(150) | Merchant or store where the transaction occurred. |
+| category | varchar (100) | Type of transaction (e.g., grocery, entertainment). |
+| amt | decimal (>0) | Amount of the transaction. |
+| first | varchar(50) | First name of the cardholder. |
+| last | varchar(50) | Last name of the cardholder. |
+| gender | char(1) | Gender of the cardholder. |
+| street | varchar(250) | Address details of the cardholder. |
+| city | varchar(50) | Address details of the cardholder. |
+| state | char(2) | Address details of the cardholder. |
+| zip | varchar(20) | Address details of the cardholder. |
+| lat | double | Geographical coordinates of the transaction. |
+| long | double | Geographical coordinates of the transaction. |
+| city_pop | int | Population of the city where the transaction occurred. |
+| job | varchar(100) | Occupation of the cardholder. |
+| dob | Date | Date of birth of the cardholder. |
+| trans_num | varchar(100) | Unique transaction number. |
+| unix_time | int | Unix timestamp of the transaction. |
+| merch_lat | double | Geographical coordinates of the merchant. |
+| merch_long | double | Geographical coordinates of the merchant. |
+| is_fraud | tinyint (bool) | Indicator of whether the transaction is fraudulent. |
+| merch_zipcode | varchar(50) can be null | Geographical coordinates of the merchant. |
+
+# Schemas
+
+For organization the following schemas were created: `stage`, `dim`, `fact` and `dw`.
+
+Entities names in snake_case.
+
+Collation case insensitive UTF-8.
+
+# Tables
+
+`dw.audit` for ETL process auditing.
+
+`stage.transactions` is a temporary table to gather all input before processing (so all varchar, accepts all, with audit columns).
+
+- Ignores first column (a row counter) and unix_time (invalid value, 7 years difference from real transaction timestamp).
+
+`dim.card_holder` :
+
+| Column | Type | Null? |
+| --- | --- | --- |
+| id | bigint, PK |  |
+| name | varchar(150) |  |
+| gender | char(1) |  |
+| street | varchar(255) |  |
+| city | varchar(50) |  |
+| state | char(2) |  |
+| zip | varchar(10) |  |
+| job | varchar(255) |  |
+| birth_date | date |  |
+
+`dim.merchant` :
+
+| Column | Type | Null? |
+| --- | --- | --- |
+| id | bigint, PK |  |
+| name | varchar(150) |  |
+| lat | decimal(10, 6) |  |
+| long | decimal(10, 6) |  |
+| zip | varchar(10) | Y |
+
+`dim.full_date` :
+
+| Column | Type | Null? |
+| --- | --- | --- |
+| id | int, PK |  |
+| date | date |  |
+| day_of_month | int |  |
+| day_of_week | varchar(20) |  |
+| is_weekend | bit |  |
+| month | int |  |
+| year | int |  |
+
+`dim.category` :
+
+| Column | Type | Null? |
+| --- | --- | --- |
+| id | int, PK |  |
+| name | varchar(50) |  |
+
+`fact.credit` :
+
+| Column | Type | Null? |
+| --- | --- | --- |
+| id | bigint, PK |  |
+| trans_num | varchar(150), unique |  |
+| credit_card_number | varchar(50) |  |
+| age_at_transaction | int |  |
+| lat | decimal(10, 6) |  |
+| long | decimal(10, 6) |  |
+| city_population | int |  |
+| amount | decimal(18, 2) |  |
+| is_fraud | bit |  |
+| time_stamp | datetime2 |  |
+| hour | int |  |
+| date_id | int, FK |  |
+| card_holder_id | bigint, FK |  |
+| merchant_id | bigint, FK |  |
+| category_id | int, FK |  |
+
+# Data Transformations
+
+The staging table is first truncated.
+
+All data is imported from the csv file to the staging table as strings, except the 2 skipped columns.
+
+### Data conversions:
+
+- trans_date_trans_time : to DateTime2
+- merchant : remove fraud_ prefix
+- amt : to decimal(18, 2)
+- gender: to char(1)
+- state : to char(2)
+- lat, long : to decimal(10, 6)
+- city_pop : to int
+- dob : to date
+- merch_lat , merch_long : to decimal(10, 6)
+- is_fraud : to bit (bool)
+
+### Derived columns (in facts table):
+
+- from trans_date_trans_time:
+    - day_of_month
+    - day_of_week
+    - is_weekend
+    - month
+    - year
+    - hour
+- from dob
+    - age_at_transaction
